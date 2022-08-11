@@ -5,6 +5,7 @@ import net.liplum.cmd.ICommand.Companion.registerSelf
 import net.liplum.util.plusAssign
 
 typealias Keyword = String
+typealias Executable = suspend (raw: Message, args: List<String>) -> Unit
 
 interface ICommand {
     val keyword: Keyword
@@ -36,7 +37,7 @@ interface ICommand {
 
 class Command(
     override val keyword: Keyword,
-    val executable: suspend (raw: Message, args: List<String>) -> Unit,
+    val executable: Executable,
 ) : ICommand {
     var description = "No description."
     override var isHidden = false
@@ -51,18 +52,22 @@ class Command(
 
 fun RegisterCommand(
     keyword: Keyword,
-    executable: suspend (raw: Message, args: List<String>) -> Unit,
+    executable: Executable,
 ) = Command(keyword, executable).registerSelf()
 
 class TreeCommand(
     override val keyword: Keyword,
 ) : ICommand {
     override var isHidden = false
-    val subCommands = HashMap<Keyword, ICommand>()
+    val subCommands = LinkedHashMap<Keyword, ICommand>()
     var description = "No description."
     fun addDesc(description: String) = apply { this.description = description }
+    var selfCommand: Executable = { _, _ -> }
     override suspend fun execute(raw: Message, args: List<String>) {
-        if (args.isEmpty()) return
+        if (args.isEmpty()) {
+            selfCommand(raw, args)
+            return
+        }
         val sub = args[0]
         subCommands[sub]?.execute(raw, args.slice(1 until args.size))
     }
@@ -71,7 +76,25 @@ class TreeCommand(
     override fun buildHelp(): String {
         val s = StringBuilder()
         s += description
+        s += "\n"
+        var i = 0
+        for ((keyword, cmd) in subCommands) {
+            if (!cmd.isHidden) {
+                s += "-->**${keyword}** ${cmd.buildHelp()}"
+            }
+            if (i < subCommands.size - 1)
+                s += "\n"
+            i++
+        }
         return s.toString()
+    }
+
+    fun whenSelf(executable: Executable) = apply {
+        selfCommand = executable
+    }
+
+    fun mapSelf(subName: String) = apply {
+        selfCommand = subCommands[subName]!!::execute
     }
 
     companion object {

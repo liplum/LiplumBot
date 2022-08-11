@@ -9,11 +9,13 @@ object CyberIOCommand {
             +Command("release") { raw, args ->
                 raw.delete()
                 raw.channel.createMessage(releaseUrl)
-            }
+            }.addDesc("the latest release.")
             +Command("preview") { raw, args ->
                 raw.delete()
                 raw.channel.createMessage(previewUrl)
-            }
-        }
+            }.addDesc("the latest developing preview.")
+        }.whenSelf { raw, args ->
+
+        }.addDesc("fetch Cyber IO download url.")
     }
 }

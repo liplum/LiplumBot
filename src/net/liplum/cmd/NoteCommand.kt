@@ -1,8 +1,10 @@
 package net.liplum.cmd
 
 import dev.kord.common.entity.Snowflake
+import dev.kord.core.behavior.channel.MessageChannelBehavior
+import dev.kord.core.behavior.channel.createEmbed
 import dev.kord.core.behavior.channel.createMessage
-import kotlinx.coroutines.delay
+import dev.kord.core.entity.User
 import net.liplum.Vars
 import net.liplum.note.Note
 
@@ -12,47 +14,66 @@ object NoteCommand {
     init {
         RegisterTreeCommand("note") {
             +Command("add") { raw, args ->
-                val note = args.joinToString(" ")
-                val authorID = raw.author?.id
-                if (authorID != null) {
-                    addNote(authorID, note)
-                    val tip = raw.channel.createMessage {
-                        content = "Your note is added."
+                val author = raw.author ?: return@Command
+                val content = args.joinToString(" ")
+                if(content.isBlank()){
+                    raw.channel.createMessage{
+                        this.content = "You can't add an empty note."
                         messageReference = raw.id
                     }
-                    delay(5000)
-                    tip.delete()
+                    return@Command
                 }
-            }
+                addNote(author.id, content)
+                raw.channel.showAllNotes(author)
+            }.addDesc("<content> -- add a note.")
             +Command("list") { raw, args ->
-                val authorID = raw.author?.id
-                if (authorID != null) {
-                    val notes = id2Notes.getOrPut(authorID, ::ArrayList)
-                    if (notes.isEmpty()) {
-                        raw.channel.createMessage {
-                            content = "You have no note."
-                        }
-                    } else {
-                        val allNotes = notes.joinToString("\n") { it.content }
-                        raw.channel.createMessage {
-                            content = allNotes
-                        }
+                val author = raw.author ?: return@Command
+                raw.channel.showAllNotes(author)
+            }.addDesc("list your all notes.")
+            +Command("it") { raw, args ->
+                val author = raw.author ?: return@Command
+                val referenced = raw.referencedMessage
+                if (referenced == null) {
+                    raw.channel.createMessage {
+                        content = "That message was deleted."
+                        messageReference = raw.id
                     }
-                    delay(5000)
-                    raw.delete()
+                    return@Command
                 }
+                val content = referenced.content
+                if(content.isBlank()){
+                    raw.channel.createMessage{
+                        this.content = "You can't add an empty note."
+                        messageReference = raw.id
+                    }
+                    return@Command
+                }
+                addNote(author.id, content)
+                raw.channel.showAllNotes(author)
+            }.addDesc("add the message you referenced..")
+        }.mapSelf("list")
+            .addDesc("Manage your notes.")
+    }
+
+    suspend fun MessageChannelBehavior.showAllNotes(user: User) {
+        val all = id2Notes.getOrPut(user.id, ::ArrayList)
+        createEmbed {
+            field("@${user.username}'s notes [${all.size}/${Vars.maxNote}]", inline = true) {
+                all.joinToString("\n") { it.content }
             }
         }
     }
 
-    fun addNote(form: Snowflake, content: String) {
+    fun addNote(form: Snowflake, content: String): Pair<ArrayList<Note>, Note> {
         val timeStamp = System.currentTimeMillis()
         val notes = id2Notes.getOrPut(form, ::ArrayList)
         if (notes.size >= Vars.maxNote) {
             val earliest = notes.minByOrNull { it.timeStamp }
             if (earliest != null) notes.remove(earliest)
         }
-        notes.add(Note(content, timeStamp))
+        val note = Note(content, timeStamp)
+        notes.add(note)
         notes.distinctBy { it.content }
+        return Pair(notes, note)
     }
 }
