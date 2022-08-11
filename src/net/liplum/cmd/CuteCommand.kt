@@ -19,7 +19,7 @@ object UwUCommand {
                 uwuEmoji
             }
             if (uwu != null) {
-                raw.channel.createMessage(uwu)
+                raw.channel.createMessage("$uwu")
             }
         }.registerSelf()
     }

@@ -12,6 +12,8 @@ object LiplumCommand {
         "Stop",
         "Seriously?${Emojis.sweatSmile}",
         "Why should I obey you?${Emojis.`-1`}",
+        "I won't endorse you.",
+        "I don't want to say that.",
     )
 
     init {

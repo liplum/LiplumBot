@@ -2,7 +2,6 @@ package net.liplum
 
 import dev.kord.core.Kord
 import net.liplum.cmd.addCommandSystem
-import net.liplum.reaction.addCuteReaction
 import net.liplum.util.Token
 
 suspend fun main() {

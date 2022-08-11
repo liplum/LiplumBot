@@ -10,6 +10,8 @@ suspend fun addCommandSystem() {
     CyberIOCommand
     UwUCommand
     LiplumCommand
+    HelpCommand
+    NoteCommand
     Vars.bot.on<MessageCreateEvent> {
         if (message.isSentBySelf) return@on
         val content = message.content
