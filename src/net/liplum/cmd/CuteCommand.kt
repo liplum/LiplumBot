@@ -1,26 +1,21 @@
 package net.liplum.cmd
 
-import kotlinx.coroutines.flow.firstOrNull
-import net.liplum.cmd.ICommand.Companion.registerSelf
+import dev.kord.x.emoji.Emojis
+import net.liplum.Vars.Emoji.heihei
+import net.liplum.Vars.Emoji.uwu
 
 object UwUCommand {
     var uwuEmoji: String? = null
 
     init {
-        Command("uwu") { raw, args ->
+        RegisterCommand("uwu") { raw, args ->
             raw.delete()
-            val uwu = if (uwuEmoji == null) {
-                val mention = raw.getGuild().emojis.firstOrNull {
-                    it.name == "uwu"
-                }?.mention
-                uwuEmoji = mention
-                mention
-            } else {
-                uwuEmoji
-            }
-            if (uwu != null) {
-                raw.channel.createMessage("$uwu")
-            }
-        }.registerSelf()
+            raw.channel.createMessage(uwu.mention)
+        }.addDesc("UwU")
+
+        RegisterCommand("YOY") { raw, args ->
+            raw.delete()
+            raw.channel.createMessage("${Emojis.v}${heihei.mention}${Emojis.v}")
+        }.addDesc("Cursed.").hidden()
     }
 }

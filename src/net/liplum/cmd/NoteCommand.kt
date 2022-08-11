@@ -10,7 +10,7 @@ object NoteCommand {
     val id2Notes = HashMap<Snowflake, ArrayList<Note>>()
 
     init {
-        TreeCommand("note") {
+        RegisterTreeCommand("note") {
             +Command("add") { raw, args ->
                 val note = args.joinToString(" ")
                 val authorID = raw.author?.id

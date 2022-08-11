@@ -7,7 +7,7 @@ import net.liplum.Vars
 
 suspend fun addMemberModule() {
     Vars.bot.on<MemberLeaveEvent> {
-        kord.getChannel(Vars.Chanel.bot)
-        kord.rest.channel.getChannel(Vars.Chanel.bot)
+        /*kord.getChannel(Vars.Chanel.bot)
+        kord.rest.channel.getChannel(Vars.Chanel.bot)*/
     }
 }

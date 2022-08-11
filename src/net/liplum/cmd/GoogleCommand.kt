@@ -14,6 +14,7 @@ object GoogleCommand : ICommand {
         "Here you are.",
         "This for you.",
         "Click this.",
+        "Check this.",
         "Google it yourself next time.",
     )
     init {
@@ -23,7 +24,6 @@ object GoogleCommand : ICommand {
     const val head = "https://www.google.com/search?q="
     fun genReply() = conversation.random()
     override suspend fun execute(raw: Message, args: List<String>) {
-        raw.delete()
         val full = args.joinToString(" ")
         val query = withContext(Dispatchers.IO) {
             URLEncoder.encode(full, "UTF-8")
@@ -33,4 +33,6 @@ object GoogleCommand : ICommand {
         delay(5000)
         reply.delete()
     }
+
+    override fun buildHelp() = "<phrase..> -- google it."
 }

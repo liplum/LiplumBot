@@ -5,7 +5,7 @@ object CyberIOCommand {
     const val previewUrl = "https://nightly.link/liplum/CyberIO/workflows/Push/v5/CyberIO-Unzip-This.zip"
 
     init {
-        TreeCommand("cyberio") {
+        RegisterTreeCommand("cyberio") {
             +Command("release") { raw, args ->
                 raw.delete()
                 raw.channel.createMessage(releaseUrl)

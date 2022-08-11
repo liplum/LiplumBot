@@ -2,8 +2,7 @@ package net.liplum.cmd
 
 import dev.kord.core.behavior.channel.createMessage
 import dev.kord.x.emoji.Emojis
-import net.liplum.Vars
-import net.liplum.cmd.ICommand.Companion.registerSelf
+import net.liplum.Guilds
 
 object LiplumCommand {
     val warnings = listOf(
@@ -17,11 +16,11 @@ object LiplumCommand {
     )
 
     init {
-        Command("repeat") { raw, args ->
-            if (raw.author?.id == Vars.liplum) {
-                val order = args.joinToString(" ")
+        RegisterCommand("repeat") { raw, args ->
+            if (raw.author?.id == Guilds.User.liplum) {
                 raw.delete()
-                raw.channel.createMessage{
+                val order = args.joinToString(" ")
+                raw.channel.createMessage {
                     content = order
                     messageReference = raw.messageReference?.data?.id?.value
                 }
@@ -31,6 +30,6 @@ object LiplumCommand {
                     messageReference = raw.id
                 }
             }
-        }.registerSelf()
+        }.hidden()
     }
 }

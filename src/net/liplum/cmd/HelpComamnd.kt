@@ -1,15 +1,15 @@
 package net.liplum.cmd
 
-import dev.kord.core.behavior.channel.createMessage
-import net.liplum.cmd.ICommand.Companion.registerSelf
+import dev.kord.core.behavior.channel.createEmbed
 
 object HelpCommand {
     init {
-        Command("help") { raw, args ->
-            raw.delete()
-            raw.channel.createMessage {
-                content = ICommand.buildAllHelp()
+        RegisterCommand("help") { raw, args ->
+            raw.channel.createEmbed {
+                field(name = "Help", inline = true) {
+                    ICommand.buildAllHelp()
+                }
             }
-        }.registerSelf()
+        }.addDesc("Show this again.").hidden()
     }
 }
