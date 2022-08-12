@@ -5,6 +5,7 @@ import net.liplum.cmd.addCommandSystem
 import net.liplum.reaction.addCuteReaction
 import net.liplum.self.ToDoList
 import net.liplum.self.ToDoList.addToDoModule
+import net.liplum.self.addChatModule
 import net.liplum.util.Token
 
 suspend fun main() {
@@ -16,6 +17,7 @@ suspend fun main() {
     addCuteReaction()
     ToDoList.loadTodo()
     addToDoModule()
+    addChatModule()
     kord.login {
     }
 }

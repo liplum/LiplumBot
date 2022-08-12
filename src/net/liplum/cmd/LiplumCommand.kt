@@ -17,17 +17,26 @@ object LiplumCommand {
 
     init {
         RegisterCommand("repeat") { raw, args ->
-            if (raw.author?.id == Guilds.User.liplum) {
-                raw.delete()
-                val order = args.joinToString(" ")
-                raw.channel.createMessage {
-                    content = order
-                    messageReference = raw.messageReference?.data?.id?.value
+            when (raw.author?.id) {
+                Guilds.User.liplum -> {
+                    raw.delete()
+                    val order = args.joinToString(" ")
+                    raw.channel.createMessage {
+                        content = order
+                        messageReference = raw.messageReference?.data?.id?.value
+                    }
                 }
-            } else {
-                raw.channel.createMessage {
-                    content = warnings.random()
-                    messageReference = raw.id
+                raw.kord.selfId -> {
+                    raw.channel.createMessage {
+                        content = "There is no need to repeat myself."
+                        messageReference = raw.id
+                    }
+                }
+                else -> {
+                    raw.channel.createMessage {
+                        content = warnings.random()
+                        messageReference = raw.id
+                    }
                 }
             }
         }.hidden()

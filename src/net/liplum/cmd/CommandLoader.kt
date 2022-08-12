@@ -3,7 +3,6 @@ package net.liplum.cmd
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
 import net.liplum.Vars
-import net.liplum.util.isSentBySelf
 
 suspend fun addCommandSystem() {
     GoogleCommand
@@ -15,7 +14,6 @@ suspend fun addCommandSystem() {
         loadNotes()
     }
     Vars.bot.on<MessageCreateEvent> {
-        if (message.isSentBySelf) return@on
         val content = message.content
         if (content.startsWith("!")) {
             val msg = content.removePrefix("!")

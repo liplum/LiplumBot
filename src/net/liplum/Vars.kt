@@ -18,14 +18,14 @@ object Vars {
         lateinit var heihei: GuildEmoji
     }
 
-    object Chanel {
+    object Channel {
         lateinit var bot: GuildChannel
     }
 
     suspend fun setup() {
         plumStar = bot.getGuild(Guilds.plumStar)!!
         // Channel
-        Chanel.bot = plumStar.getChannel(Guilds.Channel.bot)
+        Channel.bot = plumStar.getChannel(Guilds.Channel.bot)
         // Emoji
         Emoji.uwu = plumStar.emojis.findByName("uwu")
         Emoji.heihei = plumStar.emojis.findByName("heihei")

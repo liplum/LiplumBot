@@ -50,7 +50,8 @@ object ToDoList {
     @Suppress("ControlFlowWithEmptyBody")
     suspend fun addToDoModule() {
         Vars.bot.on<MessageCreateEvent> {
-            if (message.author?.id != Guilds.User.liplum) return@on
+            val userID = message.author?.id
+            if (userID != Guilds.User.liplum && userID != kord.selfId) return@on
             val content = message.content
             if (content.length > Vars.maxToDoCommandCount) return@on
             val lowercase = content.lowercase().trim()
