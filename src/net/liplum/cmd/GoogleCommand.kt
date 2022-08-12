@@ -1,6 +1,8 @@
 package net.liplum.cmd
 
 import dev.kord.core.entity.Message
+import dev.kord.x.emoji.Emojis
+import dev.kord.x.emoji.addReaction
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -24,6 +26,7 @@ object GoogleCommand : ICommand {
     const val head = "https://www.google.com/search?q="
     fun genReply() = conversation.random()
     override suspend fun execute(raw: Message, args: List<String>) {
+        raw.addReaction(Emojis.ok)
         val full = args.joinToString(" ")
         val query = withContext(Dispatchers.IO) {
             URLEncoder.encode(full, "UTF-8")

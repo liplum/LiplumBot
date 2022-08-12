@@ -3,6 +3,8 @@ package net.liplum
 import dev.kord.core.Kord
 import net.liplum.cmd.addCommandSystem
 import net.liplum.reaction.addCuteReaction
+import net.liplum.self.ToDoList
+import net.liplum.self.ToDoList.addToDoModule
 import net.liplum.util.Token
 
 suspend fun main() {
@@ -12,6 +14,8 @@ suspend fun main() {
     Vars.setup()
     addCommandSystem()
     addCuteReaction()
+    ToDoList.loadTodo()
+    addToDoModule()
     kord.login {
     }
 }

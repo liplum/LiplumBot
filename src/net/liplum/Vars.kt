@@ -10,6 +10,7 @@ import net.liplum.util.findByName
 object Vars {
     lateinit var bot: Kord
     const val maxNote = 10
+    const val maxToDoCommandCount = 100
     lateinit var plumStar: Guild
 
     object Emoji {

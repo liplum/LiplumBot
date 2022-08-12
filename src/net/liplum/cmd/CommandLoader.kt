@@ -11,7 +11,9 @@ suspend fun addCommandSystem() {
     UwUCommand
     LiplumCommand
     HelpCommand
-    NoteCommand
+    NoteCommand.apply {
+        loadNotes()
+    }
     Vars.bot.on<MessageCreateEvent> {
         if (message.isSentBySelf) return@on
         val content = message.content
