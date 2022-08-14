@@ -47,7 +47,6 @@ object ToDoList {
             }
         }
     }
-    @Suppress("ControlFlowWithEmptyBody")
     suspend fun addToDoModule() {
         Vars.bot.on<MessageCreateEvent> {
             val userID = message.author?.id
@@ -55,35 +54,44 @@ object ToDoList {
             val content = message.content
             if (content.length > Vars.maxToDoCommandCount) return@on
             val lowercase = content.lowercase().trim()
+            val done = ArrayList<Int>()
+            val snapshot = all.toList()
             if (lowercase == "my todo") {
                 message.addReaction(Emojis.ok)
-                message.channel.displayToDo()
+                message.channel.displayToDo(snapshot)
             } else if (lowercase == "todo it" || lowercase == "todo this") {
                 val todo = message.referencedMessage?.content
                 if (todo != null && todo.isNotBlank()) {
                     all.add(ToDo(todo))
                     saveToDo()
                     message.addReaction(Emojis.ok)
-                    message.channel.displayToDo()
+                    message.channel.displayToDo(all)
                 } else {
                     message.addReaction(Emojis.x)
                 }
-            } else if (tryFinishToDo(lowercase, "done")) {
+            } else if (tryFinishToDo(lowercase, "done", done)) {
                 message.addReaction(Emojis.ok)
-                message.channel.displayToDo()
-            } else if (tryFinishToDo(lowercase, "finish")) {
+                saveToDo()
+                message.channel.displayToDo(snapshot, done)
+            } else if (tryFinishToDo(lowercase, "fixed", done)) {
                 message.addReaction(Emojis.ok)
-                message.channel.displayToDo()
-            } else if (tryFinishToDo(lowercase, "finished")) {
+                saveToDo()
+                message.channel.displayToDo(snapshot, done)
+            } else if (tryFinishToDo(lowercase, "resolved", done)) {
                 message.addReaction(Emojis.ok)
-                message.channel.displayToDo()
+                saveToDo()
+                message.channel.displayToDo(snapshot, done)
+            } else if (tryFinishToDo(lowercase, "finished", done)) {
+                saveToDo()
+                message.addReaction(Emojis.ok)
+                message.channel.displayToDo(snapshot, done)
             } else if (lowercase.length > 5 && lowercase.startsWith("todo:")) {
                 val todo = content.substring(5)
                 if (todo.isNotBlank()) {
                     all.add(ToDo(todo))
                     saveToDo()
                     message.addReaction(Emojis.ok)
-                    message.channel.displayToDo()
+                    message.channel.displayToDo(all)
                 } else {
                     message.addReaction(Emojis.x)
                 }
@@ -91,21 +99,26 @@ object ToDoList {
         }
     }
 
-    private suspend fun tryFinishToDo(full: String, cmd: String): Boolean {
+    private fun tryFinishToDo(
+        full: String,
+        cmd: String,
+        done: MutableList<Int>,
+    ): Boolean {
         var finished = false
         if (all.isNotEmpty() && full.startsWith(cmd)) {
             val indexFull = full.removePrefix(cmd).trim()
             if (indexFull == "all") {
-                if (finishAll())
-                    finished = true
+                done += all.indices
+                all.clear()
+                finished = true
             } else {
                 val indices = indexFull.split(",")
                 for (indexStr in indices) {
                     indexStr.trim().toIntOrNull()?.let {
                         if (it in all.indices) {
-                            if (finishToDo(it)) {
-                                finished = true
-                            }
+                            done += it
+                            all.removeAt(it)
+                            finished = true
                         }
                     }
                 }
@@ -114,35 +127,37 @@ object ToDoList {
         return finished
     }
 
-    private suspend fun finishToDo(index: Int): Boolean {
-        all.removeAt(index)
-        saveToDo()
-        return true
-    }
-
-    private suspend fun finishAll(): Boolean {
-        all.clear()
-        saveToDo()
-        return true
-    }
-
-    private suspend fun MessageChannelBehavior.displayToDo() {
+    private suspend fun MessageChannelBehavior.displayToDo(
+        snapshot: List<ToDo>,
+        done: List<Int> = emptyList(),
+    ) {
         createEmbed {
             field {
                 name = "Liplum's TODOs"
                 inline = true
-                value = if (all.isEmpty()) "You have no TODO."
-                else printToDo()
+                value = if (snapshot.isEmpty()) "You have no TODO."
+                else printToDo(snapshot, done)
             }
         }
     }
 
-    private fun printToDo(): String {
+    private fun printToDo(
+        snapshot: List<ToDo>,
+        done: List<Int>,
+    ): String {
         val s = StringBuilder()
-        for ((i, todo) in all.withIndex()) {
-            s += i.toEmojiText()
-            s += " "
-            s += todo.content
+        for ((i, todo) in snapshot.withIndex()) {
+            if (i in done) {
+                s += "~~"
+                s += Emojis.whiteCheckMark.unicode
+                s += " "
+                s += todo.content
+                s += "~~"
+            } else {
+                s += i.toEmojiText()
+                s += " "
+                s += todo.content
+            }
             if (i < all.size) s += "\n"
         }
         return s.toString()
