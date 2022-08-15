@@ -32,6 +32,11 @@ val numberEmojis = listOf(
     Emojis.nine,
 )
 val number2EmojisCache = HashMap<Int, List<ReactionEmoji.Unicode>>()
+fun Int.toEmoji(): ReactionEmoji.Unicode {
+    val number = absoluteValue.coerceIn(0, 9)
+    return numberEmojis[number].toReaction()
+}
+
 fun Int.toEmojis(): List<ReactionEmoji.Unicode> {
     val abs = this.absoluteValue
     val emojis = number2EmojisCache.getOrPut(abs) {

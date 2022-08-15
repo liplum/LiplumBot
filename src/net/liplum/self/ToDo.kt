@@ -1,12 +1,18 @@
 package net.liplum.self
 
+import dev.kord.core.any
 import dev.kord.core.behavior.channel.MessageChannelBehavior
 import dev.kord.core.behavior.channel.createEmbed
+import dev.kord.core.behavior.edit
 import dev.kord.core.event.message.MessageCreateEvent
 import dev.kord.core.on
+import dev.kord.rest.builder.message.EmbedBuilder
+import dev.kord.rest.builder.message.modify.embed
 import dev.kord.x.emoji.Emojis
 import dev.kord.x.emoji.addReaction
+import io.ktor.util.collections.*
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
@@ -16,6 +22,7 @@ import net.liplum.FileSystem
 import net.liplum.Guilds
 import net.liplum.Vars
 import net.liplum.util.plusAssign
+import net.liplum.util.toEmoji
 import net.liplum.util.toEmojiText
 
 @Serializable
@@ -25,7 +32,7 @@ data class ToDo(
 )
 
 object ToDoList {
-    val all = ArrayList<ToDo>()
+    val all = ConcurrentList<ToDo>()
     val data = FileSystem.data.resolve("MyToDo.json")
     suspend fun loadTodo() {
         withContext(Dispatchers.IO) {
@@ -43,10 +50,11 @@ object ToDoList {
     suspend fun saveToDo() {
         withContext(Dispatchers.IO) {
             if (!data.isDirectory) {
-                data.writeText(Json.encodeToString(all))
+                data.writeText(Json.encodeToString(all.toList()))
             }
         }
     }
+
     suspend fun addToDoModule() {
         Vars.bot.on<MessageCreateEvent> {
             val userID = message.author?.id
@@ -58,7 +66,32 @@ object ToDoList {
             val snapshot = all.toList()
             if (lowercase == "my todo") {
                 message.addReaction(Emojis.ok)
-                message.channel.displayToDo(snapshot)
+                val listMsg = message.channel.displayToDo(snapshot)
+                val count = all.size
+                for (i in all.indices)
+                    listMsg.addReaction(i.toEmoji())
+                delay(Vars.todoListReactionTime)
+                listMsg.addReaction(Emojis.lock)
+                if (count != all.size) return@on
+                var finished = -1
+                for (i in all.indices) {
+                    val reacted = listMsg.getReactors(i.toEmoji()).any { it.id == userID }
+                    if (reacted) {
+                        if (tryFinishToDo(i, done)) {
+                            finished = i
+                            break
+                        }
+                    }
+                }
+                if (finished != -1) {
+                    saveToDo()
+                    listMsg.edit {
+                        embeds?.clear()
+                        embed {
+                            addToDoListEmbed(snapshot, done)
+                        }
+                    }
+                }
             } else if (lowercase == "todo it" || lowercase == "todo this") {
                 val todo = message.referencedMessage?.content
                 if (todo != null && todo.isNotBlank()) {
@@ -127,18 +160,34 @@ object ToDoList {
         return finished
     }
 
+    private fun tryFinishToDo(
+        index: Int,
+        done: MutableList<Int>,
+    ): Boolean {
+        var finished = false
+        if (all.isNotEmpty()) {
+            done += index
+            all.removeAt(index)
+            finished = true
+        }
+        return finished
+    }
+
     private suspend fun MessageChannelBehavior.displayToDo(
         snapshot: List<ToDo>,
         done: List<Int> = emptyList(),
-    ) {
-        createEmbed {
-            field {
-                name = "Liplum's TODOs"
-                inline = true
-                value = if (snapshot.isEmpty()) "You have no TODO."
-                else printToDo(snapshot, done)
-            }
-        }
+    ) = createEmbed {
+        addToDoListEmbed(snapshot, done)
+    }
+
+    private fun EmbedBuilder.addToDoListEmbed(
+        snapshot: List<ToDo>,
+        done: List<Int> = emptyList(),
+    ) = field {
+        name = "Liplum's TODOs"
+        inline = true
+        value = if (snapshot.isEmpty()) "You have no TODO."
+        else printToDo(snapshot, done)
     }
 
     private fun printToDo(

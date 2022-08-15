@@ -6,12 +6,14 @@ import dev.kord.core.entity.Guild
 import dev.kord.core.entity.GuildEmoji
 import dev.kord.core.entity.channel.GuildChannel
 import net.liplum.util.findByName
+import kotlin.time.Duration.Companion.seconds
 
 object Vars {
     lateinit var bot: Kord
     const val maxNote = 10
     const val maxToDoCommandCount = 100
     lateinit var plumStar: Guild
+    val todoListReactionTime = 10.seconds
 
     object Emoji {
         lateinit var uwu: GuildEmoji
