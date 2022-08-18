@@ -24,6 +24,7 @@ import net.liplum.Vars
 import net.liplum.util.plusAssign
 import net.liplum.util.toEmoji
 import net.liplum.util.toEmojiText
+import kotlin.math.min
 
 @Serializable
 data class ToDo(
@@ -68,22 +69,15 @@ object ToDoList {
                 message.addReaction(Emojis.ok)
                 val listMsg = message.channel.displayToDo(snapshot)
                 val count = all.size
-                for (i in all.indices)
+                for (i in 0..min(all.size - 1, 9))
                     listMsg.addReaction(i.toEmoji())
                 delay(Vars.todoListReactionTime)
                 listMsg.addReaction(Emojis.lock)
                 if (count != all.size) return@on
-                var finished = -1
-                for (i in all.indices) {
-                    val reacted = listMsg.getReactors(i.toEmoji()).any { it.id == userID }
-                    if (reacted) {
-                        if (tryFinishToDo(i, done)) {
-                            finished = i
-                            break
-                        }
-                    }
+                val allReactedIndices = (0..min(all.size - 1, 9)).filter { i ->
+                    listMsg.getReactors(i.toEmoji()).any { it.id == userID }
                 }
-                if (finished != -1) {
+                if (tryFinishToDo(allReactedIndices, done)) {
                     saveToDo()
                     listMsg.edit {
                         embeds?.clear()
@@ -93,7 +87,7 @@ object ToDoList {
                     }
                 }
             } else if (lowercase == "todo it" || lowercase == "todo this") {
-                val todo = message.referencedMessage?.content
+                val todo = message.referencedMessage?.content?.trim()
                 if (todo != null && todo.isNotBlank()) {
                     all.add(ToDo(todo))
                     saveToDo()
@@ -118,8 +112,12 @@ object ToDoList {
                 saveToDo()
                 message.addReaction(Emojis.ok)
                 message.channel.displayToDo(snapshot, done)
+            } else if (tryFinishToDo(lowercase, "cancel", done)) {
+                saveToDo()
+                message.addReaction(Emojis.ok)
+                message.channel.displayToDo(snapshot, done)
             } else if (lowercase.length > 5 && lowercase.startsWith("todo:")) {
-                val todo = content.substring(5)
+                val todo = content.substring(5).trim()
                 if (todo.isNotBlank()) {
                     all.add(ToDo(todo))
                     saveToDo()
@@ -137,40 +135,52 @@ object ToDoList {
         cmd: String,
         done: MutableList<Int>,
     ): Boolean {
-        var finished = false
+        var finishedAny = false
         if (all.isNotEmpty() && full.startsWith(cmd)) {
             val indexFull = full.removePrefix(cmd).trim()
             if (indexFull == "all") {
                 done += all.indices
                 all.clear()
-                finished = true
+                finishedAny = true
             } else {
                 val indices = indexFull.split(",")
-                for (indexStr in indices) {
-                    indexStr.trim().toIntOrNull()?.let {
-                        if (it in all.indices) {
-                            done += it
-                            all.removeAt(it)
-                            finished = true
-                        }
-                    }
+                val removed = indices.mapNotNull { it.trim().toIntOrNull() }.distinct().mapNotNull {
+                    if (it !in all.indices) null else Pair(it, all[it])
+                }
+                for ((index, element) in removed) {
+                    done += index
+                    all.remove(element)
+                    finishedAny = true
                 }
             }
         }
-        return finished
+        return finishedAny
     }
 
     private fun tryFinishToDo(
         index: Int,
         done: MutableList<Int>,
     ): Boolean {
-        var finished = false
-        if (all.isNotEmpty()) {
-            done += index
-            all.removeAt(index)
-            finished = true
+        val element = (if (index !in all.indices) null else all[index]) ?: return false
+        done += index
+        all.remove(element)
+        return true
+    }
+
+    private fun tryFinishToDo(
+        indices: List<Int>,
+        done: MutableList<Int>,
+    ): Boolean {
+        val removed = indices.distinct().mapNotNull {
+            if (it !in all.indices) null else Pair(it, all[it])
         }
-        return finished
+        var finishedAny = false
+        for ((index, element) in removed) {
+            done += index
+            all.remove(element)
+            finishedAny = true
+        }
+        return finishedAny
     }
 
     private suspend fun MessageChannelBehavior.displayToDo(
@@ -199,15 +209,15 @@ object ToDoList {
             if (i in done) {
                 s += "~~"
                 s += Emojis.whiteCheckMark.unicode
-                s += " "
+                s += "  "
                 s += todo.content
                 s += "~~"
             } else {
                 s += i.toEmojiText()
-                s += " "
+                s += "  "
                 s += todo.content
             }
-            if (i < all.size) s += "\n"
+            if (i < snapshot.size) s += "\n"
         }
         return s.toString()
     }
