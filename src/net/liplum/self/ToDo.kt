@@ -143,15 +143,12 @@ object ToDoList {
                 all.clear()
                 finishedAny = true
             } else {
-                val indices = indexFull.split(",")
-                val removed = indices.mapNotNull { it.trim().toIntOrNull() }.distinct().mapNotNull {
-                    if (it !in all.indices) null else Pair(it, all[it])
-                }
-                for ((index, element) in removed) {
-                    done += index
-                    all.remove(element)
-                    finishedAny = true
-                }
+                finishedAny = tryFinishToDo(
+                    indexFull.split(",").mapNotNull {
+                        it.trim().toIntOrNull()
+                    },
+                    done
+                )
             }
         }
         return finishedAny
