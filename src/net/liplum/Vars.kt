@@ -11,7 +11,7 @@ import kotlin.time.Duration.Companion.seconds
 object Vars {
     lateinit var bot: Kord
     const val maxNote = 10
-    const val maxToDoCommandCount = 100
+    const val maxToDoCommandCount = 300
     lateinit var plumStar: Guild
     val todoListReactionTime = 10.seconds
 
@@ -25,7 +25,7 @@ object Vars {
     }
 
     suspend fun setup() {
-        plumStar = bot.getGuild(Guilds.plumStar)!!
+        plumStar = bot.getGuildOrNull(Guilds.plumStar)!!
         // Channel
         Channel.bot = plumStar.getChannel(Guilds.Channel.bot)
         // Emoji

@@ -1,6 +1,6 @@
 plugins {
-    kotlin("jvm") version "1.7.10"
-    kotlin("plugin.serialization") version "1.7.10"
+    kotlin("jvm") version "1.8.10"
+    kotlin("plugin.serialization") version "1.8.10"
     application
 }
 
@@ -21,11 +21,11 @@ repositories {
 }
 
 dependencies {
-    implementation("org.slf4j:slf4j-simple:1.7.36")
+    implementation("org.slf4j:slf4j-simple:2.0.6")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.3")
-    implementation("org.jetbrains.kotlin:kotlin-reflect:1.7.10")
-    implementation("dev.kord:kord-core:0.8.0-M10")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.5.0-RC")
+    implementation("org.jetbrains.kotlin:kotlin-reflect:1.8.0")
+    implementation("dev.kord:kord-core:0.8.0-M17")
     implementation("dev.kord.x:emoji:0.5.0")
 }
 java {

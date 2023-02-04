@@ -1,8 +1,8 @@
 package net.liplum.cmd
 
 object CyberIOCommand {
-    const val releaseUrl = "https://github.com/liplum/CyberIO/releases/download/v4.1/CyberIO-4.1.jar"
-    const val previewUrl = "https://nightly.link/liplum/CyberIO/workflows/Push/v5/CyberIO-Unzip-This.zip"
+    const val releaseUrl = "https://github.com/liplum/CyberIO/releases/download/v5.1/CyberIO-5.1.jar"
+    const val previewUrl = "https://nightly.link/liplum/CyberIO/workflows/Push/master/I-am-CyberIO-Unzip-me.zip"
 
     init {
         RegisterTreeCommand("cyberio") {

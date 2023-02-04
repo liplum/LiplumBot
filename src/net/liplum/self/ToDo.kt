@@ -13,6 +13,9 @@ import dev.kord.x.emoji.addReaction
 import io.ktor.util.collections.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
@@ -33,7 +36,7 @@ data class ToDo(
 )
 
 object ToDoList {
-    val all = ConcurrentList<ToDo>()
+    val all = ArrayList<ToDo>()
     val data = FileSystem.data.resolve("MyToDo.json")
     suspend fun loadTodo() {
         withContext(Dispatchers.IO) {
@@ -61,7 +64,10 @@ object ToDoList {
             val userID = message.author?.id
             if (userID != Guilds.User.liplum && userID != kord.selfId) return@on
             val content = message.content
-            if (content.length > Vars.maxToDoCommandCount) return@on
+            if (content.length > Vars.maxToDoCommandCount) {
+                message.addReaction(Emojis.x)
+                return@on
+            }
             val lowercase = content.lowercase().trim()
             val done = ArrayList<Int>()
             val snapshot = all.toList()
@@ -75,7 +81,7 @@ object ToDoList {
                 listMsg.addReaction(Emojis.lock)
                 if (count != all.size) return@on
                 val allReactedIndices = (0..min(all.size - 1, 9)).filter { i ->
-                    listMsg.getReactors(i.toEmoji()).any { it.id == userID }
+                    listMsg.getReactors(i.toEmoji()).toList().any { it.id == userID }
                 }
                 if (tryFinishToDo(allReactedIndices, done)) {
                     saveToDo()
@@ -88,7 +94,7 @@ object ToDoList {
                 }
             } else if (lowercase == "todo it" || lowercase == "todo this") {
                 val todo = message.referencedMessage?.content?.trim()
-                if (todo != null && todo.isNotBlank()) {
+                if (!todo.isNullOrBlank()) {
                     all.add(ToDo(todo))
                     saveToDo()
                     message.addReaction(Emojis.ok)
